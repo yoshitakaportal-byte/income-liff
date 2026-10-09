@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>収入管理</title>
+<style>
+:root{
+  --green:#06C755; --green-d:#05A847; --green-l:#C8F0D7; --green-bg:#EAF8EF;
+  --amber:#E5A100; --amber-l:#FCE9B6; --red:#E0453A; --red-l:#F9D3CF;
+  --ink:#1F2328; --sub:#6B7280; --mute:#9CA3AF; --line:#E5E7EB; --bg:#F5F6F7; --card:#FFFFFF;
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+main{max-width:560px;margin:0 auto;padding:0 0 88px}
+.top{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+.top-title{font-weight:700;font-size:17px}
+.icon-btn{border:0;background:none;width:40px;height:40px;border-radius:20px;font-size:22px;color:var(--sub)}
+.icon-btn:active{background:var(--bg)}
+.tabs{display:flex}
+.tab{flex:1;border:0;background:none;padding:10px 0 9px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
+.tab.on{color:var(--green-d);border-bottom-color:var(--green)}
+.card{background:var(--card);margin:12px;border-radius:14px;padding:16px;border:1px solid var(--line)}
+.card h2{font-size:15px;margin:0 0 10px}
+.muted{color:var(--sub)} .small{font-size:12.5px} .tiny{font-size:11.5px}
+.center{text-align:center}
+.ring-wrap{display:flex;justify-content:center;padding:8px 0 4px}
+.ring-box{position:relative;width:210px;height:210px}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px}
+.ring-label{font-size:13px;color:var(--sub)} .ring-value{font-size:30px;font-weight:700;letter-spacing:.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:12px;color:var(--sub)} .stat .v{font-size:17px;font-weight:700}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;vertical-align:1px}
+.b-ok{background:var(--green-bg);color:var(--green-d)} .b-est{background:#EEF0F3;color:var(--sub)}
+.b-warn{background:var(--amber-l);color:#7A5600} .b-red{background:var(--red-l);color:#9B241B}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{font-weight:500;color:var(--sub);font-size:12px;text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t td{padding:10px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.t tr.total td{font-weight:700;border-bottom:0}
+.list-row{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.list-row:last-child{border-bottom:0}
+.list-row .grow{flex:1;min-width:0}
+.list-row .amt{font-weight:700;white-space:nowrap}
+.chev{color:var(--mute)}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-weight:700;font-size:16px}
+.btn-primary{background:var(--green);color:#fff} .btn-primary:active{background:var(--green-d)}
+.btn-line{background:var(--card);border:1px solid var(--line)} .btn-danger{background:none;color:var(--red);font-weight:600}
+.btn[disabled]{opacity:.5}
+.btn-row{display:flex;gap:8px;margin-top:12px} .btn-row .btn{flex:1}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field>label:first-child{color:var(--sub);font-size:14px;flex:1 1 auto;min-width:0}
+.field input,.field select{border:0;background:var(--bg);border-radius:8px;padding:8px 10px;text-align:right;min-width:0;width:60%;max-width:220px}
+.field input:focus,.field select:focus{outline:2px solid var(--green-l)}
+.field .hint{display:block;font-size:11.5px;color:var(--mute)}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:8px 0;font-weight:600;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--green-d);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:13px}
+.chip.on{border-color:var(--green);color:var(--green-d);background:var(--green-bg)}
+.preview{background:var(--green-bg);border-radius:12px;padding:12px 14px;margin-top:12px}
+.preview .big{font-size:24px;font-weight:700}
+.notice{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7}
+.n-warn{background:#FFF7E0;color:#6B4E00} .n-info{background:#EEF4FF;color:#23407A}
+.disclaimer{margin:16px 12px;font-size:11.5px;color:var(--sub);line-height:1.7}
+.popup{margin:12px;border-radius:14px;background:#FFF7E0;border:1px solid #F2D48A;overflow:hidden}
+.popup-head{display:flex;align-items:center;gap:10px;padding:13px 14px;border:0;background:none;width:100%;text-align:left;font-weight:700;color:#6B4E00}
+.popup-head .arrow{margin-left:auto;transition:transform .2s}
+.popup.open .popup-head .arrow{transform:rotate(90deg)}
+.popup-body{display:none;padding:0 14px 14px;font-size:13.5px;color:#4A3800;line-height:1.75}
+.popup.open .popup-body{display:block}
+.popup-body ol{padding-left:20px;margin:6px 0}
+.bars{display:flex;align-items:flex-end;gap:5px;height:120px;padding:6px 2px 0;border-bottom:1px solid var(--line)}
+.bar{flex:1;display:flex;flex-direction:column-reverse;height:100%}
+.bar i{display:block;width:100%}
+.bar .c{background:var(--green)} .bar .e{background:var(--green-l)}
+.bar-labels{display:flex;gap:5px;padding:4px 2px 0}
+.bar-labels span{flex:1;text-align:center;font-size:11px;color:var(--sub)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.nav[hidden]{display:none!important}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+.nav button{flex:1;border:0;background:none;padding:8px 0 7px;font-size:11px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button .ic{height:22px;line-height:0}
+.nav button.on{color:var(--green-d);font-weight:700}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:rgba(31,35,40,.92);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:20;display:none;max-width:90%}
+.loading{padding:60px 0;text-align:center;color:var(--sub)}
+.spinner{width:28px;height:28px;border:3px solid var(--green-l);border-top-color:var(--green);border-radius:50%;margin:0 auto 10px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{color:var(--red);font-size:13px;margin-top:8px}
+.section-title{margin:18px 16px 4px;font-size:13px;color:var(--sub);font-weight:600}
+.empty{padding:24px 0;text-align:center;color:var(--mute);font-size:14px}
+.switch{position:relative;width:48px;height:28px;flex:0 0 48px}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;background:#D1D5DB;border-radius:28px;transition:.2s}
+.switch span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked+span{background:var(--green)} .switch input:checked+span:before{transform:translateX(20px)}
+</style>
+</head>
+<body>
+<main id="app"><div class="loading"><div class="spinner"></div>読み込み中…</div></main>
+<nav class="nav" id="nav" hidden>
+  <button data-go="status"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z" fill="currentColor"/></svg></span>収入状況</button>
+  <button data-go="input"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M12 9v7M8.5 12.5h7M8 2.5v3M16 2.5v3"/></svg></span>手入力</button>
+  <button data-go="edit"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></span>修正</button>
+  <button data-go="settings"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>設定</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+/* ====== 設定（公開してよい値だけ。パスワード類はここに書かない） ====== */
+const CONFIG = {
+  LIFF_ID: '2011951549-3PdNxb0g',
+  API_URL: 'ここにGASのウェブアプリURL（…/exec）',
+};
+
+/* ====== 共通 ====== */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const yen = n => (n < 0 ? '-' : '') + '¥' + Math.abs(Math.round(n || 0)).toLocaleString('ja-JP');
+const hm = min => { min = Math.round(min || 0); return Math.floor(min / 60) + '時間' + String(min % 60).padStart(2, '0') + '分'; };
+const md = d => d ? Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10)) : '';
+const ymLabel = ym => ym.slice(0, 4) + '年' + Number(ym.slice(5, 7)) + '月';
+const WEEK = '日月火水木金土';
+const wd = d => WEEK[new Date(d + 'T00:00:00').getDay()];
+const pad = n => String(n).padStart(2, '0');
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 2200); }
+
+const S = { page: 'status', tab: 'month', year: null, month: null, init: null, status: {}, editShift: null, editPayslip: null, editWp: null };
+const LIFF = window.__MOCK__ ? window.__MOCK__.liff : window.liff;
+
+async function api(name, data) {
+  const body = JSON.stringify({ api: name, idToken: LIFF.getIDToken(), data: data || {} });
+  const res = window.__MOCK__ ? await window.__MOCK__.api(body)
+    : await fetch(CONFIG.API_URL, { method: 'POST', body }).then(r => r.json());
+  if (!res.ok) {
+    if (res.error === 'auth' && !api._retried) { api._retried = true; LIFF.logout(); location.reload(); }
+    throw new Error(res.message || 'エラーが発生しました');
+  }
+  return res.data;
+}
+
+async function loadStatus(year, force) {
+  if (!S.status[year] || force) S.status[year] = await api('status', { year });
+  return S.status[year];
+}
+function invalidate() { S.status = {}; }
+
+function go(page, opts) {
+  S.page = page;
+  if (opts) Object.assign(S, opts);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.go === page));
+  window.scrollTo(0, 0);
+  render();
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => {
+  if (b.dataset.go === 'input') S.editShift = null;
+  go(b.dataset.go);
+});
+
+async function render() {
+  if (!S.init.user.consentAt) return renderConsent();
+  $('#nav').hidden = false;
+  try {
+    if (S.page === 'status') await renderStatus();
+    else if (S.page === 'input') await renderInput();
+    else if (S.page === 'edit') await renderEdit();
+    else if (S.page === 'payslip') await renderPayslipForm();
+    else if (S.page === 'settings') renderSettings();
+    else if (S.page === 'workplace') renderWorkplaceForm();
+  } catch (e) {
+    app.innerHTML = '<div class="card"><b>読み込めませんでした</b><p class="muted small">' + esc(e.message) + '</p><button class="btn btn-line" onclick="render()">もう一度</button></div>';
+  }
+}
+function loading() { app.innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中…</div>'; }
+
+/* ====== 円グラフ（SVG） ====== */
+function ring(ratio, color, inner) {
+  const r = 84, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, ratio));
+  return '<div class="ring-wrap"><div class="ring-box"><svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true">' +
+    '<circle cx="105" cy="105" r="' + r + '" fill="none" stroke="#EEF0F3" stroke-width="16"/>' +
+    (p > 0 ? '<circle cx="105" cy="105" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + (c * p) + ' ' + c + '" transform="rotate(-90 105 105)"/>' : '') +
+    '</svg><div class="ring-center">' + inner + '</div></div></div>';
+}
+
+/* ====== 初回の同意 ====== */
+function renderConsent() {
+  $('#nav').hidden = true;
+  const u = S.init.user;
+  app.innerHTML =
+    '<div class="card"><h2>はじめに</h2><p class="small" style="margin:0 0 10px">打刻画面や給与明細の写真から収入を集計して、扶養の目標金額までの残りを表示します。使い始める前に、次の内容を確認してください。</p>' +
+    '<div class="notice n-warn" style="white-space:pre-wrap">' + esc(S.init.disclaimer) + '</div></div>' +
+    '<div class="card"><h2>基本情報</h2>' +
+    '<div class="field"><label>生年月日</label><input type="date" id="c-birth" value="' + esc(u.birthdate) + '"></div>' +
+    '<div class="field"><label>目標金額<span class="hint">扶養の判定に使う年収</span></label><input type="number" inputmode="numeric" id="c-target" value="' + esc(u.target) + '"></div>' +
+    '<p class="tiny muted" style="margin:8px 0 0">あとから設定画面で変更できます。</p>' +
+    '<div class="err" id="c-err"></div>' +
+    '<button class="btn btn-primary" id="c-ok" style="margin-top:14px">同意して始める</button></div>';
+  $('#c-ok').onclick = async () => {
+    const btn = $('#c-ok'); btn.disabled = true;
+    try {
+      const r = await api('saveSettings', { birthdate: $('#c-birth').value, target: $('#c-target').value, includeTransport: u.includeTransport, consent: true });
+      S.init.user = r.user;
+      render();
+    } catch (e) { $('#c-err').textContent = e.message; btn.disabled = false; }
+  };
+}
+
+/* ====== 収入状況 ====== */
+async function renderStatus() {
+  if (!S.status[S.year]) loading();
+  const st = await loadStatus(S.year);
+  const head =
+    '<div class="top"><div class="top-row">' +
+    '<button class="icon-btn" id="prev">‹</button>' +
+    '<div class="top-title">' + (S.tab === 'month' ? S.year + '年' + S.month + '月' : S.year + '年') + '</div>' +
+    '<button class="icon-btn" id="next">›</button></div>' +
+    '<div class="tabs"><button class="tab ' + (S.tab === 'month' ? 'on' : '') + '" data-tab="month">月次</button>' +
+    '<button class="tab ' + (S.tab === 'year' ? 'on' : '') + '" data-tab="year">年次</button></div></div>';
+  app.innerHTML = head + (S.tab === 'month' ? monthView(st) : yearView(st)) +
+    '<div class="disclaimer">' + esc(S.init.disclaimer).replace(/\n/g, '<br>') + '</div>';
+
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; renderStatus(); });
+  const step = d => {
+    if (S.tab === 'year') S.year += d;
+    else { S.month += d; if (S.month < 1) { S.month = 12; S.year--; } if (S.month > 12) { S.month = 1; S.year++; } }
+    renderStatus();
+  };
+  $('#prev').onclick = () => step(-1);
+  $('#next').onclick = () => step(1);
+  document.querySelectorAll('[data-shift]').forEach(el => el.onclick = () => openShift(el.dataset.shift));
+  const det = $('#toggle-detail'); if (det) det.onclick = () => { $('#detail').hidden = !$('#detail').hidden; det.textContent = $('#detail').hidden ? '内訳と勤務日一覧を見る' : '閉じる'; };
+  const pop = $('#filing'); if (pop) pop.querySelector('.popup-head').onclick = () => pop.classList.toggle('open');
+}
+
+function monthView(st) {
+  const m = st.months[S.month - 1];
+  if (!m.items.length) {
+    return ring(0, 'var(--green)', '<div class="ring-label">給料</div><div class="ring-value">¥0</div>') +
+      '<div class="card empty">この月の勤務はまだありません<br><span class="small">写真をLINEに送るか、手入力から登録してください</span></div>';
+  }
+  const confirmedAll = m.allConfirmed;
+  const someConfirmed = m.items.some(i => i.status === '確定');
+  const label = confirmedAll ? '給料（確定）' : someConfirmed ? '給料（一部確定）' : '給料（見込み）';
+  const pending = m.items.some(i => i.transportPending);
+  let rows = m.items.map(i =>
+    '<tr><td>' + esc(i.name) + (i.payDate ? '<div class="tiny muted">' + md(i.payDate) + '支給' + (i.status === '見込み' ? '予定' : '') + '</div>' : '') + '</td>' +
+    '<td>' + hm(i.workMin) + '</td><td>' + yen(i.estimate) + '</td>' +
+    '<td>' + (i.confirmed == null ? '<span class="muted">未着</span>' : yen(i.confirmed)) + '</td></tr>').join('');
+  rows += '<tr class="total"><td>合計</td><td>' + hm(m.workMin) + '</td><td>' + yen(m.items.reduce((s, i) => s + i.estimate, 0)) + '</td><td>' +
+    (someConfirmed ? yen(m.items.reduce((s, i) => s + (i.confirmed || 0), 0)) : '¥-') + '</td></tr>';
+
+  const detail = m.items.map(i => {
+    const b = i.breakdown;
+    const bd = i.shifts.some(s => s.kind === '時間')
+      ? '<div class="grid2" style="margin-top:6px"><div class="stat"><div class="k">基本</div><div class="v">' + yen(b.base) + '</div></div>' +
+        '<div class="stat"><div class="k">ランチ</div><div class="v">' + yen(b.lunch) + '</div></div>' +
+        '<div class="stat"><div class="k">深夜割増</div><div class="v">' + yen(b.night) + '</div></div>' +
+        '<div class="stat"><div class="k">8時間超え割増</div><div class="v">' + yen(b.overtime) + '</div></div></div>' +
+        '<p class="tiny muted" style="margin:6px 0 0">内訳は目安です（1日ごとの端数処理で、合計と数円ずれることがあります）</p>' : '';
+    const list = i.shifts.map(s =>
+      '<div class="list-row" data-shift="' + esc(s.shiftId) + '"><div class="grow"><b>' + md(s.date) + '（' + wd(s.date) + '）</b> ' +
+      (s.kind === '単発' ? '<span class="badge b-est">単発</span>' : '<span class="muted small">' + esc(s.start.slice(11)) + '〜' + esc(s.end.slice(11)) + '</span>') +
+      '<div class="tiny muted">' + hm(s.workMin) + (s.nightMin ? '・深夜' + hm(s.nightMin) : '') + (s.source === '打刻写真' ? '・写真' : '・手入力') + (s.memo ? '・' + esc(s.memo) : '') + '</div></div>' +
+      '<div class="amt">' + yen(s.pay) + '</div><span class="chev">›</span></div>').join('');
+    return '<div style="margin-top:14px"><b>' + esc(i.name) + '</b> <span class="badge ' + (i.status === '確定' ? 'b-ok' : 'b-est') + '">' + i.status + '</span>' + bd + list + '</div>';
+  }).join('');
+
+  return ring(1, confirmedAll ? 'var(--green)' : 'var(--green-l)',
+      '<div class="ring-label">' + label + '</div><div class="ring-value">' + yen(m.income) + '</div>') +
+    '<div class="card" style="margin-top:0"><div class="grid2" style="margin-top:0">' +
+    '<div class="stat"><div class="k">勤務時間</div><div class="v">' + hm(m.workMin) + '</div></div>' +
+    '<div class="stat"><div class="k">うち深夜</div><div class="v">' + hm(m.nightMin) + '</div></div>' +
+    '<div class="stat"><div class="k">交通費</div><div class="v">' + (pending && !m.transport ? '<span class="small muted">明細待ち</span>' : yen(m.transport)) + '</div></div>' +
+    '<div class="stat"><div class="k">総支給</div><div class="v">' + yen(m.income + m.transport) + '</div></div></div></div>' +
+    '<div class="card"><table class="t"><tr><th></th><th>勤務時間</th><th>見込み</th><th>確定</th></tr>' + rows + '</table>' +
+    '<button class="btn btn-line" id="toggle-detail" style="margin-top:12px">内訳と勤務日一覧を見る</button>' +
+    '<div id="detail" hidden>' + detail + '</div></div>';
+}
+
+function yearView(st) {
+  const y = st.yearly;
+  const p = y.progress;
+  const color = p > 0.95 ? 'var(--red)' : p > 0.8 ? 'var(--amber)' : 'var(--green)';
+  const over = y.judged > y.target;
+  const inner = over
+    ? '<div class="ring-label">目標を</div><div class="ring-value" style="color:var(--red)">' + yen(y.judged - y.target) + '</div><div class="ring-label">超えています</div>'
+    : '<div class="ring-label">目標まで あと</div><div class="ring-value">' + yen(y.remaining) + '</div><div class="ring-label">' + Math.round(p * 100) + '%</div>';
+  const age = st.age ? '<span class="badge ' + (st.age.tokutei ? 'b-ok' : 'b-est') + '">' + st.age.age + '歳' + (st.age.tokutei ? '（19〜22歳）' : '') + '</span>' : '';
+  const max = Math.max(1, ...y.payMonths.map(m => m.confirmed + m.estimate));
+  const bars = y.payMonths.map(m => '<div class="bar"><i class="c" style="height:' + (m.confirmed / max * 100) + '%"></i><i class="e" style="height:' + (m.estimate / max * 100) + '%"></i></div>').join('');
+  const monthRows = y.payMonths.filter(m => m.confirmed + m.estimate > 0).map(m =>
+    '<div class="list-row" style="cursor:default"><div class="grow">' + Number(m.ym.slice(5)) + '月支給</div>' +
+    '<span class="badge ' + (m.estimate ? (m.confirmed ? 'b-warn' : 'b-est') : 'b-ok') + '">' + (m.estimate ? (m.confirmed ? '一部見込み' : '見込み') : '確定') + '</span>' +
+    '<div class="amt" style="min-width:92px;text-align:right">' + yen(m.confirmed + m.estimate) + '</div></div>').join('') || '<div class="empty">まだ支給予定がありません</div>';
+
+  return ring(p, color, inner) +
+    '<p class="center small muted" style="margin:0">目標 ' + yen(y.target) + ' ' + age + '<br><span class="tiny">支給日の年で数えています（12月分が1月支給なら翌年の収入）</span></p>' +
+    '<div class="card"><div class="grid2" style="margin-top:0">' +
+    '<div class="stat"><div class="k">判定に使う額</div><div class="v">' + yen(y.judged) + '</div></div>' +
+    '<div class="stat"><div class="k">あと働ける目安</div><div class="v">' + (y.hoursLeft == null ? '-' : '約' + y.hoursLeft.toLocaleString('ja-JP') + '時間') + '</div></div>' +
+    '<div class="stat"><div class="k">交通費' + (y.includeTransport ? '（判定に含む）' : '（判定外）') + '</div><div class="v">' + yen(y.transport) + '</div></div>' +
+    '<div class="stat"><div class="k">総支給</div><div class="v">' + yen(y.gross) + '</div></div></div>' +
+    '<p class="tiny muted" style="margin:10px 0 0">確定 ' + yen(y.confirmed) + '・見込み ' + yen(y.estimate) +
+    (y.hourly ? '・時給の目安 ' + yen(y.hourly) : '') + (y.transportPending ? '<br>明細がまだの月は交通費が入っていません' : '') + '</p></div>' +
+    '<div class="card"><h2>支給月ごとの収入</h2><div class="bars">' + bars + '</div>' +
+    '<div class="bar-labels">' + y.payMonths.map(m => '<span>' + Number(m.ym.slice(5)) + '</span>').join('') + '</div>' +
+    '<div class="legend"><span><i style="background:var(--green)"></i>確定</span><span><i style="background:var(--green-l)"></i>見込み</span></div>' +
+    '<div style="margin-top:8px">' + monthRows + '</div></div>' +
+    taxCard(st.tax) + filingPopup(st.tax);
+}
+
+function taxCard(t) {
+  if (!t || !t.withheld) {
+    return '<div class="card"><h2>所得税</h2><p class="small muted" style="margin:0">今年の明細で引かれた所得税はまだありません。</p></div>';
+  }
+  const line = yen(t.noTaxLine);
+  let back;
+  if (t.underLine) {
+    back = '<div class="stat"><div class="k">年末調整で戻る見込み</div><div class="v" style="color:var(--green-d)">' + yen(t.refundYearEnd) + '</div></div>';
+  } else {
+    back = '<div class="stat"><div class="k">年末調整で戻る見込み</div><div class="v small">年末調整で決まります</div></div>';
+  }
+  return '<div class="card"><h2>所得税</h2><div class="grid2" style="margin-top:0">' +
+    '<div class="stat"><div class="k">今年引かれた所得税</div><div class="v">' + yen(t.withheld) + '</div></div>' + back + '</div>' +
+    '<p class="tiny muted" style="margin:10px 0 0">' +
+    (t.underLine ? '年収が' + line + '以下の見込みなので、引かれた所得税は全額戻る見込みです。' : '年収が' + line + 'を超える見込みなので、戻る額は年末調整・確定申告で決まります。') +
+    (t.received ? '<br>すでに調整額として ' + yen(t.received) + ' 戻っています。' : '') +
+    '<br>明細を登録した月の分だけで計算した目安です。</p></div>';
+}
+
+function filingPopup(t) {
+  if (!t || !t.needsFiling) return '';
+  const list = t.byWorkplace.filter(b => b.route === '確定申告' && b.withheld > 0)
+    .map(b => '<li><b>' + esc(b.name) + '</b>：' + yen(b.withheld) + '（' + esc(b.reason) + '）</li>').join('');
+  return '<div class="popup" id="filing"><button class="popup-head"><span>💡</span><span>確定申告で所得税が戻る可能性があります</span><span class="arrow">›</span></button>' +
+    '<div class="popup-body">' +
+    '<p style="margin:0 0 6px">次のバイト先で引かれた所得税は、年末調整では戻りません。</p><ul style="padding-left:18px;margin:0 0 8px">' + list + '</ul>' +
+    (t.underLine ? '<p style="margin:0 0 6px">今年の年収が' + yen(t.noTaxLine) + '以下なら、確定申告（還付申告）をすると <b>' + yen(t.refundFiling) + '</b> 戻る見込みです。</p>' : '') +
+    '<b>手続きの流れ</b><ol>' +
+    '<li>それぞれのバイト先から「源泉徴収票」をもらう（やめたバイト先にも請求できます）</li>' +
+    '<li>翌年の1月以降に、e-Taxか税務署で確定申告（還付申告）をする。還付申告は翌年1月1日から5年間できます</li>' +
+    '<li>申告が終わると、1〜2か月ほどで指定した口座に振り込まれます</li></ol>' +
+    '<p style="margin:6px 0 0" class="tiny">年末調整は、12月の時点で「扶養控除等申告書」を出しているバイト先（甲欄）で1か所だけ行われます。乙欄は、2か所目以降のバイト先で使われる区分です。<br>表示は目安です。正確な手続きは税務署やバイト先に確認してください。</p>' +
+    '</div></div>';
+}
+
+/* ====== 手入力・修正（勤務） ====== */
+function findShift(id) {
+  for (const y of Object.keys(S.status)) for (const m of S.status[y].months) for (const it of m.items) {
+    const s = it.shifts.find(x => x.shiftId === id); if (s) return s;
+  }
+  return null;
+}
+function openShift(id) { S.editShift = findShift(id); go('input'); }
+
+async function renderInput() {
+  const wps = S.init.workplaces.filter(w => w.active || (S.editShift && w.workplaceId === S.editShift.workplaceId));
+  const s = S.editShift;
+  const today = S.init.today;
+  const f = s ? {
+    kind: s.kind, workplaceId: s.workplaceId, date: s.date,
+    start: s.start ? s.start.slice(11) : '', end: s.end ? s.end.slice(11) : '',
+    breakMin: s.breaks ? String(breakMinOf(s.breaks)) : '', dailyWage: s.dailyWage || '', transport: s.transport || '', memo: s.memo || '', payDate: '',
+  } : { kind: '時間', workplaceId: (wps[0] || {}).workplaceId || '', date: today, start: '', end: '', breakMin: '', dailyWage: '', transport: '', memo: '', payDate: '' };
+
+  if (!wps.length && f.kind === '時間') {
+    app.innerHTML = '<div class="card"><h2>手入力</h2><p class="small">先に設定画面でバイト先を登録してください。</p><button class="btn btn-primary" onclick="go(\'settings\')">設定を開く</button>' +
+      '<p class="small muted" style="margin:12px 0 6px">バイト先を決めずに単発バイトだけ入力することもできます。</p><button class="btn btn-line" id="spot-only">単発バイトを入力</button></div>';
+    $('#spot-only').onclick = () => { S.editShift = { kind: '単発', workplaceId: '', date: today, start: '', end: '', breaks: '', dailyWage: '', transport: '', memo: '' }; S.editShift.shiftId = ''; renderInput(); };
+    return;
+  }
+
+  const wpOptions = (f.kind === '単発' ? '<option value="">バイト先なし</option>' : '') +
+    wps.map(w => '<option value="' + esc(w.workplaceId) + '"' + (w.workplaceId === f.workplaceId ? ' selected' : '') + '>' + esc(w.name) + (w.active ? '' : '（やめた）') + '</option>').join('');
+
+  app.innerHTML =
+    '<div class="top"><div class="top-row"><div style="width:40px"></div><div class="top-title">' + (s && s.shiftId ? '勤務の修正' : '勤務の入力') + '</div><div style="width:40px"></div></div></div>' +
+    '<div class="card"><div class="seg" id="kind"><button data-k="時間" class="' + (f.kind === '時間' ? 'on' : '') + '">時間で入力</button><button data-k="単発" class="' + (f.kind === '単発' ? 'on' : '') + '">単発（日給）</button></div>' +
+    '<div style="margin-top:6px">' +
+    '<div class="field"><label>勤務先</label><select id="f-wp">' + wpOptions + '</select></div>' +
+    '<div class="field"><label>勤務日</label><input type="date" id="f-date" value="' + esc(f.date) + '"></div>' +
+    '<div class="field"><label>開始' + (f.kind === '単発' ? '<span class="hint">任意</span>' : '') + '</label><input type="time" id="f-start" value="' + esc(f.start) + '"></div>' +
+    '<div class="field"><label>終了<span class="hint" id="f-next"></span></label><input type="time" id="f-end" value="' + esc(f.end) + '"></div>' +
+    '<div class="field"><label>休憩（分）<span class="hint" id="f-bhint"></span></label><div style="width:60%;max-width:220px">' +
+    '<input type="number" inputmode="numeric" id="f-break" value="' + esc(f.breakMin) + '" placeholder="初期値" style="width:100%">' +
+    '<div class="chips" style="margin-top:6px">' + [0, 30, 60, 90].map(n => '<button class="chip" data-b="' + n + '">' + n + '</button>').join('') + '</div></div></div>' +
+    (f.kind === '単発'
+      ? '<div class="field"><label>日給</label><input type="number" inputmode="numeric" id="f-wage" value="' + esc(f.dailyWage) + '" placeholder="9000"></div>' +
+        '<div class="field"><label>交通費</label><input type="number" inputmode="numeric" id="f-trans" value="' + esc(f.transport) + '" placeholder="0"></div>' +
+        '<div class="field"><label>支給日<span class="hint">空欄なら勤務日・設定から</span></label><input type="date" id="f-paydate" value="' + esc(f.payDate) + '"></div>'
+      : '') +
+    '<div class="field"><label>メモ</label><input type="text" id="f-memo" value="' + esc(f.memo) + '" placeholder="未入力" style="text-align:left"></div></div>' +
+    '<div class="preview" id="f-prev"><span class="muted small">時刻を入れると給料を計算します</span></div>' +
+    '<div class="err" id="f-err"></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" id="f-save">' + (s && s.shiftId ? '修正を保存' : '保存する') + '</button></div>' +
+    (s && s.shiftId ? '<button class="btn btn-danger" id="f-del" style="margin-top:6px">この勤務を削除</button>' : '') +
+    '</div>';
+
+  const val = () => ({
+    shiftId: s && s.shiftId || '', kind: f.kind, workplaceId: $('#f-wp').value, date: $('#f-date').value,
+    start: $('#f-start').value, end: $('#f-end').value, breakMin: $('#f-break').value,
+    dailyWage: $('#f-wage') ? $('#f-wage').value : '', transport: $('#f-trans') ? $('#f-trans').value : '',
+    payDate: $('#f-paydate') ? $('#f-paydate').value : '', memo: $('#f-memo').value,
+  });
+
+  document.querySelectorAll('#kind button').forEach(b => b.onclick = () => {
+    S.editShift = Object.assign({}, s || {}, val(), { kind: b.dataset.k, start: val().start ? val().date + ' ' + val().start : '', end: val().end ? val().date + ' ' + val().end : '', breaks: val().breakMin ? val().breakMin + '分' : '' });
+    renderInput();
+  });
+  document.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { $('#f-break').value = b.dataset.b; update(); });
+
+  let timer;
+  const update = () => {
+    const v = val();
+    document.querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', v.breakMin !== '' && Number(v.breakMin) === Number(b.dataset.b)));
+    $('#f-next').textContent = v.start && v.end && v.end <= v.start ? '翌日' : '';
+    clearTimeout(timer);
+    const ready = v.kind === '単発' ? Number(v.dailyWage) > 0 : (v.workplaceId && v.date && v.start && v.end);
+    if (!ready) { $('#f-prev').innerHTML = '<span class="muted small">' + (v.kind === '単発' ? '日給を入れると集計に入る金額を表示します' : '時刻を入れると給料を計算します') + '</span>'; return; }
+    timer = setTimeout(async () => {
+      try {
+        const p = await api('preview', v);
+        $('#f-bhint').textContent = v.kind === '時間' ? '空欄なら' + p.defaultBreakMin + '分（' + (p.dayOff ? '土日祝' : '平日') + '）' : '';
+        $('#f-prev').innerHTML = '<div class="small muted">給料（見込み）</div><div class="big">' + yen(p.pay) + '</div>' +
+          '<div class="small">' + (p.workMin ? '勤務 ' + hm(p.workMin) : '') + (p.nightMin ? '・深夜 ' + hm(p.nightMin) : '') +
+          (p.lunchMin ? '・ランチ ' + hm(p.lunchMin) : '') + (p.overtimeMin ? '・8時間超え ' + hm(p.overtimeMin) : '') +
+          '<br>支給予定日 ' + md(p.payDate) + (v.kind === '時間' ? '・休憩 ' + p.breakMin + '分' : '') + '</div>';
+        $('#f-err').textContent = '';
+      } catch (e) { $('#f-prev').innerHTML = '<span class="small" style="color:var(--red)">' + esc(e.message) + '</span>'; }
+    }, 350);
+  };
+  app.querySelectorAll('input,select').forEach(el => el.addEventListener('input', update));
+  update();
+
+  $('#f-save').onclick = async () => {
+    const btn = $('#f-save'); btn.disabled = true;
+    try {
+      const r = await api('saveShift', val());
+      invalidate(); toast('保存しました（' + yen(r.pay) + '）');
+      const d = val().date;
+      S.editShift = null;
+      go('status', { tab: 'month', year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
+    } catch (e) { $('#f-err').textContent = e.message; btn.disabled = false; }
+  };
+  if ($('#f-del')) $('#f-del').onclick = async () => {
+    if (!confirm('この勤務を削除しますか？')) return;
+    try { await api('deleteShift', { shiftId: s.shiftId }); invalidate(); toast('削除しました'); S.editShift = null; go('edit'); }
+    catch (e) { $('#f-err').textContent = e.message; }
+  };
+}
+
+function breakMinOf(text) {
+  if (/分$/.test(text)) return Number(text.replace('分', ''));
+  return String(text).split(',').filter(Boolean).reduce((sum, p) => {
+    const [a, b] = p.split('-'); if (!a || !b) return sum;
+    const t = x => Number(x.slice(0, 2)) * 60 + Number(x.slice(3, 5));
+    let d = t(b) - t(a); if (d < 0) d += 1440; return sum + d;
+  }, 0);
+}
+
+/* ====== 修正（一覧） ====== */
+async function renderEdit() {
+  if (!S.status[S.year]) loading();
+  const st = await loadStatus(S.year);
+  const m = st.months[S.month - 1];
+  const shifts = m.items.reduce((a, i) => a.concat(i.shifts.map(s => Object.assign({ wpName: i.name }, s))), [])
+    .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  const slips = m.items.filter(i => i.payslip);
+  app.innerHTML =
+    '<div class="top"><div class="top-row"><button class="icon-btn" id="prev">‹</button><div class="top-title">' + S.year + '年' + S.month + '月の修正</div><button class="icon-btn" id="next">›</button></div></div>' +
+    '<div class="section-title">勤務（' + shifts.length + '件）</div><div class="card" style="margin-top:4px;padding:4px 14px">' +
+    (shifts.length ? shifts.map(s =>
+      '<div class="list-row" data-shift="' + esc(s.shiftId) + '"><div class="grow"><b>' + md(s.date) + '（' + wd(s.date) + '）</b> <span class="small muted">' + esc(s.wpName) + '</span>' +
+      '<div class="tiny muted">' + (s.kind === '単発' ? '単発' : esc(s.start.slice(11)) + '〜' + esc(s.end.slice(11)) + '・' + hm(s.workMin)) + '・' + (s.source === '打刻写真' ? '写真' : '手入力') + '</div></div>' +
+      '<div class="amt">' + yen(s.pay) + '</div><span class="chev">›</span></div>').join('') : '<div class="empty">勤務はありません</div>') + '</div>' +
+    '<div class="section-title">給与明細</div><div class="card" style="margin-top:4px;padding:4px 14px">' +
+    (slips.length ? slips.map(i =>
+      '<div class="list-row" data-slip="' + esc(i.payslip.payslipId) + '"><div class="grow"><b>' + esc(i.name) + '</b> <span class="small muted">' + Number(i.period.slice(5)) + '月分</span>' +
+      '<div class="tiny muted">' + md(i.payslip.payDate) + '支給・所得税 ' + yen(i.payslip.incomeTax) + (i.payslip.adjustment ? '・調整額 ' + yen(i.payslip.adjustment) : '') + '</div></div>' +
+      '<div class="amt">' + yen(i.payslip.taxable) + '</div><span class="chev">›</span></div>').join('') : '<div class="empty">この月の明細はありません</div>') + '</div>' +
+    '<div style="margin:12px"><button class="btn btn-line" id="add-slip">この月の明細を手で入力</button></div>';
+
+  $('#prev').onclick = () => { S.month--; if (S.month < 1) { S.month = 12; S.year--; } renderEdit(); };
+  $('#next').onclick = () => { S.month++; if (S.month > 12) { S.month = 1; S.year++; } renderEdit(); };
+  document.querySelectorAll('[data-shift]').forEach(el => el.onclick = () => openShift(el.dataset.shift));
+  document.querySelectorAll('[data-slip]').forEach(el => el.onclick = () => {
+    const it = m.items.find(i => i.payslip && i.payslip.payslipId === el.dataset.slip);
+    S.editPayslip = Object.assign({ workplaceId: it.workplaceId, target: it.period }, it.payslip);
+    go('payslip');
+  });
+  $('#add-slip').onclick = () => { S.editPayslip = { target: S.year + '-' + pad(S.month) }; go('payslip'); };
+}
+
+async function renderPayslipForm() {
+  const p = S.editPayslip || {};
+  const wps = S.init.workplaces;
+  if (!wps.length) { app.innerHTML = '<div class="card"><p class="small">先に設定画面でバイト先を登録してください。</p><button class="btn btn-primary" onclick="go(\'settings\')">設定を開く</button></div>'; return; }
+  app.innerHTML =
+    '<div class="top"><div class="top-row"><button class="icon-btn" onclick="go(\'edit\')">‹</button><div class="top-title">給与明細' + (p.payslipId ? 'の修正' : 'の入力') + '</div><div style="width:40px"></div></div></div>' +
+    '<div class="card">' +
+    '<div class="field"><label>バイト先</label><select id="p-wp">' + wps.map(w => '<option value="' + esc(w.workplaceId) + '"' + (w.workplaceId === p.workplaceId ? ' selected' : '') + '>' + esc(w.name) + '</option>').join('') + '</select></div>' +
+    '<div class="field"><label>対象月<span class="hint">○月分</span></label><input type="month" id="p-target" value="' + esc(p.target || '') + '"></div>' +
+    '<div class="field"><label>支給日<span class="hint">空欄なら設定から計算</span></label><input type="date" id="p-paydate" value="' + esc(p.payDateSource === '計算' ? '' : (p.payDate || '')) + '"></div>' +
+    '<div class="field"><label>課税支給<span class="hint">交通費を除いた支給額</span></label><input type="number" inputmode="numeric" id="p-taxable" value="' + esc(p.taxable == null ? '' : p.taxable) + '"></div>' +
+    '<div class="field"><label>交通費（非課税）</label><input type="number" inputmode="numeric" id="p-trans" value="' + esc(p.transport || 0) + '"></div>' +
+    '<div class="field"><label>所得税</label><input type="number" inputmode="numeric" id="p-tax" value="' + esc(p.incomeTax || 0) + '"></div>' +
+    '<div class="field"><label>調整額<span class="hint">年末調整の戻りはプラス</span></label><input type="number" inputmode="numeric" id="p-adj" value="' + esc(p.adjustment || 0) + '"></div>' +
+    '<div class="field"><label>税区分</label><select id="p-col">' + ['', '甲', '乙', '丙'].map(c => '<option' + ((p.taxColumn || '') === c ? ' selected' : '') + ' value="' + c + '">' + (c || 'わからない') + '</option>').join('') + '</select></div>' +
+    '<div class="err" id="p-err"></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" id="p-save">保存する</button></div>' +
+    (p.payslipId ? '<button class="btn btn-danger" id="p-del" style="margin-top:6px">この明細を削除</button>' : '') + '</div>' +
+    '<p class="disclaimer">明細を登録した月は、勤務からの見込みではなく明細の金額（確定）で集計します。調整額は収入に入りません。</p>';
+  $('#p-save').onclick = async () => {
+    const btn = $('#p-save'); btn.disabled = true;
+    try {
+      await api('savePayslip', { payslipId: p.payslipId || '', workplaceId: $('#p-wp').value, target: $('#p-target').value, payDate: $('#p-paydate').value,
+        taxable: $('#p-taxable').value, transport: $('#p-trans').value, incomeTax: $('#p-tax').value, adjustment: $('#p-adj').value, taxColumn: $('#p-col').value });
+      invalidate(); toast('保存しました');
+      const t = $('#p-target').value; S.year = Number(t.slice(0, 4)); S.month = Number(t.slice(5, 7));
+      go('edit');
+    } catch (e) { $('#p-err').textContent = e.message; btn.disabled = false; }
+  };
+  if ($('#p-del')) $('#p-del').onclick = async () => {
+    if (!confirm('この明細を削除しますか？（勤務からの見込みに戻ります）')) return;
+    try { await api('deletePayslip', { payslipId: p.payslipId }); invalidate(); toast('削除しました'); go('edit'); }
+    catch (e) { $('#p-err').textContent = e.message; }
+  };
+}
+
+/* ====== 設定 ====== */
+function renderSettings() {
+  const u = S.init.user;
+  const wps = S.init.workplaces;
+  const hasIchigoya = wps.some(w => w.presetId === 'ichigoya' && w.active);
+  app.innerHTML =
+    '<div class="top"><div class="top-row"><div style="width:40px"></div><div class="top-title">設定</div><div style="width:40px"></div></div></div>' +
+    '<div class="section-title">基本情報</div><div class="card" style="margin-top:4px">' +
+    '<div class="field"><label>生年月日</label><input type="date" id="s-birth" value="' + esc(u.birthdate) + '"></div>' +
+    '<div class="field"><label>目標金額<span class="hint">扶養の判定に使う年収</span></label><input type="number" inputmode="numeric" id="s-target" value="' + esc(u.target) + '"></div>' +
+    '<div class="chips" style="padding:8px 0 4px">' + [[1590000, '159万'], [1500000, '150万'], [1300000, '130万'], [1780000, '178万']].map(c => '<button class="chip" data-t="' + c[0] + '">' + c[1] + '</button>').join('') + '</div>' +
+    '<div class="field"><label>交通費を含めて判定<span class="hint">社会保険の扶養などで使う場合はオン</span></label><label class="switch"><input type="checkbox" id="s-trans"' + (u.includeTransport ? ' checked' : '') + '><span></span></label></div>' +
+    '<div class="err" id="s-err"></div><button class="btn btn-primary" id="s-save" style="margin-top:10px">保存する</button></div>' +
+    '<div class="section-title">バイト先</div><div class="card" style="margin-top:4px;padding:4px 14px">' +
+    (wps.length ? wps.map(w => '<div class="list-row" data-wp="' + esc(w.workplaceId) + '"><div class="grow"><b>' + esc(w.name) + '</b> ' +
+      (w.presetId ? '<span class="badge b-ok">プリセット</span> ' : '') + (w.active ? '' : '<span class="badge b-est">やめた</span>') +
+      '<div class="tiny muted">時給 ' + yen(w.baseWage) + '・' + closingText(w) + '</div></div><span class="chev">›</span></div>').join('') : '<div class="empty">まだ登録されていません</div>') + '</div>' +
+    '<div style="margin:12px;display:flex;flex-direction:column;gap:8px">' +
+    (hasIchigoya ? '' : S.init.presets.map(p => '<button class="btn btn-line" data-preset="' + esc(p.id) + '">' + esc(p.name) + 'を追加（プリセット）</button>').join('')) +
+    '<button class="btn btn-line" id="s-add">ほかのバイト先を追加</button></div>' +
+    '<div class="disclaimer">' + esc(S.init.disclaimer).replace(/\n/g, '<br>') + (u.consentAt ? '<br>同意日時：' + esc(u.consentAt) : '') + '</div>';
+
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { $('#s-target').value = b.dataset.t; });
+  $('#s-save').onclick = async () => {
+    const btn = $('#s-save'); btn.disabled = true;
+    try {
+      const r = await api('saveSettings', { birthdate: $('#s-birth').value, target: $('#s-target').value, includeTransport: $('#s-trans').checked, consent: true });
+      S.init.user = r.user; invalidate(); toast('保存しました'); btn.disabled = false;
+    } catch (e) { $('#s-err').textContent = e.message; btn.disabled = false; }
+  };
+  document.querySelectorAll('[data-preset]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { const r = await api('addPreset', { presetId: b.dataset.preset }); S.init.workplaces = r.workplaces; invalidate(); toast('追加しました'); renderSettings(); }
+    catch (e) { toast(e.message); b.disabled = false; }
+  });
+  document.querySelectorAll('[data-wp]').forEach(el => el.onclick = () => { S.editWp = wps.find(w => w.workplaceId === el.dataset.wp); go('workplace'); });
+  $('#s-add').onclick = () => {
+    S.editWp = { name: '', baseWage: '', lunchWage: '', lunchEnd: '', weekdayBreakMin: 0, holidayBreakMin: 0, breakStart: '', closingDay: 0, payMonthOffset: 1, payDay: 25, payShift: '前倒し', companyName: '', active: true };
+    go('workplace');
+  };
+}
+
+function closingText(w) {
+  const c = Number(w.closingDay) ? w.closingDay + '日締め' : '末日締め';
+  const m = ['当月', '翌月', '翌々月'][Number(w.payMonthOffset) || 0] || '翌月';
+  return c + '・' + m + w.payDay + '日払い';
+}
+
+function renderWorkplaceForm() {
+  const w = S.editWp;
+  const opt = (arr, cur) => arr.map(a => '<option value="' + a[0] + '"' + (String(a[0]) === String(cur) ? ' selected' : '') + '>' + a[1] + '</option>').join('');
+  const days = [[0, '末日']].concat(Array.from({ length: 28 }, (_, i) => [i + 1, (i + 1) + '日']));
+  const payDays = Array.from({ length: 31 }, (_, i) => [i + 1, (i + 1) + '日']);
+  app.innerHTML =
+    '<div class="top"><div class="top-row"><button class="icon-btn" onclick="go(\'settings\')">‹</button><div class="top-title">' + (w.workplaceId ? 'バイト先の編集' : 'バイト先の追加') + '</div><div style="width:40px"></div></div></div>' +
+    (w.presetId ? '<div class="card notice n-info" style="border:0">プリセットのバイト先です。昇給したときは時給だけ変えてください。</div>' : '') +
+    '<div class="card">' +
+    '<div class="field"><label>名前</label><input type="text" id="w-name" value="' + esc(w.name) + '" style="text-align:left"></div>' +
+    '<div class="field"><label>時給</label><input type="number" inputmode="numeric" id="w-base" value="' + esc(w.baseWage) + '"></div>' +
+    '<div class="field"><label>平日ランチ時給<span class="hint">なければ空欄</span></label><input type="number" inputmode="numeric" id="w-lunch" value="' + esc(w.lunchWage) + '"></div>' +
+    '<div class="field"><label>ランチの終わり<span class="hint">この時刻より前の労働</span></label><input type="time" id="w-lunchend" value="' + esc(w.lunchEnd) + '"></div>' +
+    '<div class="field"><label>休憩の初期値（平日）</label><input type="number" inputmode="numeric" id="w-bw" value="' + esc(w.weekdayBreakMin) + '"></div>' +
+    '<div class="field"><label>休憩の初期値（土日祝）</label><input type="number" inputmode="numeric" id="w-bh" value="' + esc(w.holidayBreakMin) + '"></div>' +
+    '<div class="field"><label>休憩の開始時刻<span class="hint">手入力のとき、ここから休憩</span></label><input type="time" id="w-bs" value="' + esc(w.breakStart) + '"></div>' +
+    '<div class="field"><label>締め日</label><select id="w-close">' + opt(days, w.closingDay || 0) + '</select></div>' +
+    '<div class="field"><label>支払月</label><select id="w-pm">' + opt([[0, '当月'], [1, '翌月'], [2, '翌々月']], w.payMonthOffset == null ? 1 : w.payMonthOffset) + '</select></div>' +
+    '<div class="field"><label>支払日</label><select id="w-pd">' + opt(payDays, w.payDay || 25) + '</select></div>' +
+    '<div class="field"><label>支払日が休業日のとき</label><select id="w-ps">' + opt([['前倒し', '前倒し'], ['後ろ倒し', '後ろ倒し']], w.payShift || '前倒し') + '</select></div>' +
+    '<div class="field"><label>明細に書かれる会社名<span class="hint">明細の判定に使う</span></label><input type="text" id="w-company" value="' + esc(w.companyName) + '" style="text-align:left"></div>' +
+    '<div class="err" id="w-err"></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" id="w-save">保存する</button></div></div>' +
+    (w.workplaceId ? '<div class="card"><div class="field"><label>このバイト先をやめた<span class="hint">オンにすると入力の候補に出なくなり、所得税は確定申告の対象として扱います</span></label><label class="switch"><input type="checkbox" id="w-quit"' + (w.active ? '' : ' checked') + '><span></span></label></div></div>' : '');
+
+  $('#w-save').onclick = async () => {
+    const btn = $('#w-save'); btn.disabled = true;
+    try {
+      const r = await api('saveWorkplace', {
+        workplaceId: w.workplaceId || '', name: $('#w-name').value, baseWage: $('#w-base').value, lunchWage: $('#w-lunch').value,
+        lunchEnd: $('#w-lunchend').value, weekdayBreakMin: $('#w-bw').value || 0, holidayBreakMin: $('#w-bh').value || 0,
+        breakStart: $('#w-bs').value, closingDay: $('#w-close').value, payMonthOffset: $('#w-pm').value, payDay: $('#w-pd').value,
+        payShift: $('#w-ps').value, companyName: $('#w-company').value,
+      });
+      S.init.workplaces = r.workplaces; invalidate(); toast('保存しました'); go('settings');
+    } catch (e) { $('#w-err').textContent = e.message; btn.disabled = false; }
+  };
+  if ($('#w-quit')) $('#w-quit').onchange = async e => {
+    try { const r = await api('setWorkplaceActive', { workplaceId: w.workplaceId, active: !e.target.checked }); S.init.workplaces = r.workplaces; invalidate(); toast('変更しました'); }
+    catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
+  };
+}
+
+/* ====== 起動 ====== */
+(async function start() {
+  try {
+    await LIFF.init({ liffId: CONFIG.LIFF_ID });
+    if (!LIFF.isLoggedIn()) { LIFF.login(); return; }
+    S.init = await api('init');
+    const t = S.init.today;
+    S.year = Number(t.slice(0, 4)); S.month = Number(t.slice(5, 7));
+    const q = new URLSearchParams(location.search);
+    const page = q.get('page');
+    go(['status', 'input', 'edit', 'settings'].includes(page) ? page : 'status');
+  } catch (e) {
+    app.innerHTML = '<div class="card"><b>起動できませんでした</b><p class="small muted">' + esc(e.message) + '</p><p class="tiny muted">LINEアプリから開いているか確認してください。</p></div>';
+  }
+})();
+</script>
+</body>
+</html>
