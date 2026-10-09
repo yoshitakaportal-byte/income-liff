@@ -99,6 +99,18 @@ table.t tr.total td{font-weight:700;border-bottom:0}
 .switch input{opacity:0;width:0;height:0}
 .switch span{position:absolute;inset:0;background:#D1D5DB;border-radius:28px;transition:.2s}
 .switch span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.doc{font-size:13.5px;line-height:1.8}
+.doc h3{font-size:14px;margin:18px 0 4px} .doc h3:first-child{margin-top:0}
+.doc p{margin:4px 0} .doc ul{margin:4px 0;padding-left:20px} .doc li{margin:2px 0}
+.doc .meta{color:var(--sub);font-size:12px;margin-top:16px}
+.acc{border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden}
+.acc-head{display:flex;align-items:center;width:100%;border:0;background:var(--bg);padding:12px 14px;font-weight:700;text-align:left}
+.acc-head .arrow{margin-left:auto;color:var(--mute);transition:transform .2s}
+.acc.open .acc-head .arrow{transform:rotate(90deg)}
+.acc-body{display:none;max-height:340px;overflow-y:auto;padding:12px 14px;border-top:1px solid var(--line)}
+.acc.open .acc-body{display:block}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;font-weight:600;cursor:pointer}
+.check input{width:22px;height:22px;flex:0 0 22px;margin:1px 0 0;accent-color:var(--green)}
 .switch input:checked+span{background:var(--green)} .switch input:checked+span:before{transform:translateX(20px)}
 </style>
 </head>
@@ -119,6 +131,94 @@ const CONFIG = {
   LIFF_ID: '2011952367-pGzm9PNo',
   API_URL: 'https://script.google.com/macros/s/AKfycbyIvZle-n7eg8KJWc5PdVDJUfMinuo6Da9GjyMbwc5j8CSyHtUR2W7yOyMo_UqcU_yp/exec',
 };
+
+/* ====== 利用規約・プライバシーポリシー ======
+   文面を変えたら TERMS_VERSION を変え、GASの 11_api.gs の TERMS_VERSION も同じ値にする（全員に再同意をお願いする） */
+const TERMS_VERSION = '2026-10-09-2';
+const TERMS_DATE = '2026年10月9日';
+
+const TERMS_HTML = `
+<h3>第1条（このサービスについて）</h3>
+<p>INCOVIA（以下「本サービス」）は、YoshitakaPortal（以下「運営者」）が個人で無料提供している、アルバイト収入の記録・集計サービスです。本規約とプライバシーポリシーに同意した方だけが利用できます。</p>
+<h3>第2条（料金）</h3>
+<p>本サービスは無料です。通信料は利用者の負担となります。</p>
+<h3>第3条（計算結果の扱い）</h3>
+<ul>
+<li>表示する金額、扶養の判定、所得税の戻り見込み、あと働ける時間などは、入力・読み取りした内容と一般的なルールをもとにした目安です。正確さや完全さは保証しません。</li>
+<li>写真の読み取りには誤りが含まれることがあります。読み取り結果は必ず確認し、違っていたら修正してください。</li>
+<li>扶養のラインは、年齢、家族の勤務先の手当の基準、社会保険などによって人ごとに違います。扶養・税金・社会保険についての最終的な判断は、勤務先、家族の勤務先、税務署などに確認したうえで、ご自身の責任で行ってください。</li>
+</ul>
+<h3>第4条（利用者の責任）</h3>
+<ul>
+<li>打刻画面や給与明細の写真を送ってよいかは、勤務先の就業規則やルールをご自身で確認してください。</li>
+<li>写真に写った名前などの情報や、ほかの人が写り込んだ情報は、ご自身で隠してから送ってください。</li>
+<li>本サービスの利用はご自身の判断と責任で行ってください。</li>
+</ul>
+<h3>第5条（禁止事項）</h3>
+<ul>
+<li>他人の打刻画面や給与明細を、本人の同意なく送ること</li>
+<li>大量の送信や不正なアクセスなど、本サービスの運営を妨げること</li>
+<li>法令や公序良俗に反すること</li>
+</ul>
+<h3>第6条（サービスの変更・停止）</h3>
+<p>運営者は、予告なく本サービスの内容を変えたり、一時停止・終了したりすることがあります。LINEやGoogleなど外部サービスの仕様変更や無料枠の上限によって、読み取りが遅れたり使えなくなったりする場合があります。</p>
+<h3>第7条（データの保管）</h3>
+<p>記録したデータは、障害などで失われる可能性があります。給与明細などの原本はご自身でも保管してください。</p>
+<h3>第8条（免責）</h3>
+<p>1. 本サービスの利用に関連して生じたあらゆるトラブルや損害について、運営者は責任を負いません。たとえば次のようなものを含みます。</p>
+<ul>
+<li>表示した金額、扶養の判定、税金の見込みなどが実際と違ったことによるもの（扶養から外れたことによる本人や家族の税金・保険料の増加、家族手当の停止や返還などを含みます）</li>
+<li>写真の読み取りミス、計算の誤り、表示の不具合によるもの</li>
+<li>データの消失・破損、サービスの停止・終了によるもの</li>
+<li>勤務先、家族、そのほかの第三者との間で起きたトラブル（勤務先のルールに反して写真を送ったことによるものを含みます）</li>
+<li>LINEやGoogleなど外部サービスの障害、仕様変更、データの取り扱いによるもの</li>
+<li>不正アクセスなど、運営者の管理が及ばない原因によるもの</li>
+</ul>
+<p>2. 利用者と第三者との間で起きたトラブルは、利用者の責任で解決してください。</p>
+<p>3. 前の2項は、運営者の故意または重大な過失による場合など、法令により責任を免れることが認められない場合には適用しません。</p>
+<h3>第9条（未成年の方）</h3>
+<p>18歳未満の方は、保護者の同意を得たうえで利用してください。</p>
+<h3>第10条（規約の変更）</h3>
+<p>運営者は本規約を変更することがあります。変更したときは画面でお知らせし、改めて同意をお願いします。</p>
+<p class="meta">制定日：${TERMS_DATE}</p>`;
+
+const PRIVACY_HTML = `
+<h3>1. 取得する情報</h3>
+<ul>
+<li>LINEのユーザーID（LINEが発行するランダムな英数字で、名前ではありません）</li>
+<li>設定で入力した内容（生年月日、目標金額、バイト先の名前・時給・締め日・支払日など）</li>
+<li>写真から読み取った、または手入力した勤務・給与の数字（日付、出勤・退勤の時刻、休憩、勤務時間、支給額、控除額、所得税、交通費など）と、明細に書かれた会社名</li>
+<li>同意した日時</li>
+</ul>
+<p>LINEの表示名、プロフィール画像、電話番号、メールアドレスは取得しません。</p>
+<h3>2. 写真の扱い</h3>
+<ul>
+<li>送られた写真は、GoogleのAI（Gemini API）に送って文字を読み取ります。</li>
+<li>写真は保存せず、読み取りが終わりしだい削除します。読み取りが混み合っているときだけ運営者のGoogleドライブに一時的に保管し、読み取りが終わりしだい完全に削除します（ゴミ箱にも残しません）。</li>
+<li>Gemini APIは無料枠で利用しているため、送られた写真がGoogleのサービス改善に使われたり、Googleの担当者に確認されたりする場合があります。<b>名前、社員番号、住所などは隠してから送ってください。</b></li>
+<li>LINEのトーク画面やLINEのサーバーに残った写真は、運営者では削除できません。</li>
+</ul>
+<h3>3. 利用目的</h3>
+<p>収入の集計と扶養の目安の表示、読み取り結果のお知らせ、不具合の調査のためだけに使います。広告や販売などには使いません。</p>
+<h3>4. 保存場所と管理</h3>
+<p>データは運営者のGoogleアカウントのスプレッドシートに保存します。運営者は不具合の調査などのためにデータを見られる立場にありますが、利用目的以外では見たり使ったりしません。Googleのサーバーは海外（米国など）にある場合があります。</p>
+<h3>5. 第三者への提供</h3>
+<p>法令にもとづく場合を除き、第三者には提供しません。なお、本サービスの運営には次のサービスを利用しています。</p>
+<ul>
+<li>LINEヤフー株式会社（LINE公式アカウント、LINEログイン）</li>
+<li>Google LLC（Gemini API、Googleスプレッドシート、Googleドライブ）</li>
+</ul>
+<h3>6. 保存期間と削除</h3>
+<ul>
+<li>データは、利用者が削除するまで保存します。</li>
+<li>「設定」の「すべてのデータを削除」から、いつでも削除できます。削除したデータは元に戻せません。</li>
+<li>友だちをブロック・削除しても、データは自動では消えません。使うのをやめるときは、先にデータを削除してください。</li>
+</ul>
+<h3>7. ポリシーの変更</h3>
+<p>このポリシーを変更したときは画面でお知らせし、改めて同意をお願いします。</p>
+<h3>8. お問い合わせ</h3>
+<p>本サービスについてのお問い合わせは、運営者に直接ご連絡ください。</p>
+<p class="meta">制定日：${TERMS_DATE}</p>`;
 
 /* ====== 共通 ====== */
 const $ = s => document.querySelector(s);
@@ -166,7 +266,8 @@ document.querySelectorAll('#nav button').forEach(b => b.onclick = () => {
 });
 
 async function render() {
-  if (!S.init.user.consentAt) return renderConsent();
+  if (S.page === 'deleted') return renderDeleted();
+  if (!S.init.user.consentAt || S.init.user.termsVersion !== S.init.termsVersion) return renderConsent();
   $('#nav').hidden = false;
   try {
     if (S.page === 'status') await renderStatus();
@@ -175,6 +276,8 @@ async function render() {
     else if (S.page === 'payslip') await renderPayslipForm();
     else if (S.page === 'settings') renderSettings();
     else if (S.page === 'workplace') renderWorkplaceForm();
+    else if (S.page === 'doc') renderDoc();
+    else if (S.page === 'deleteAll') renderDeleteAll();
   } catch (e) {
     app.innerHTML = '<div class="card"><b>読み込めませんでした</b><p class="muted small">' + esc(e.message) + '</p><button class="btn btn-line" onclick="render()">もう一度</button></div>';
   }
@@ -191,26 +294,87 @@ function ring(ratio, color, inner) {
 }
 
 /* ====== 初回の同意 ====== */
+function accordion(id, title, html) {
+  return '<div class="acc" id="' + id + '"><button class="acc-head" type="button">' + title + '<span class="arrow">›</span></button>' +
+    '<div class="acc-body doc">' + html + '</div></div>';
+}
 function renderConsent() {
   $('#nav').hidden = true;
   const u = S.init.user;
+  const again = !!u.consentAt; // 前に同意していて、規約が変わった人
+  if (S.init.termsVersion !== TERMS_VERSION) {
+    app.innerHTML = '<div class="card"><b>画面が古いバージョンです</b><p class="muted small">LINEを閉じて開き直してください。直らないときは運営者に連絡してください。</p></div>';
+    return;
+  }
   app.innerHTML =
-    '<div class="card"><h2>はじめに</h2><p class="small" style="margin:0 0 10px">打刻画面や給与明細の写真から収入を集計して、扶養の目標金額までの残りを表示します。使い始める前に、次の内容を確認してください。</p>' +
-    '<div class="notice n-warn" style="white-space:pre-wrap">' + esc(S.init.disclaimer) + '</div></div>' +
-    '<div class="card"><h2>基本情報</h2>' +
-    '<div class="field"><label>生年月日</label><input type="date" id="c-birth" value="' + esc(u.birthdate) + '"></div>' +
-    '<div class="field"><label>目標金額<span class="hint">扶養の判定に使う年収</span></label><input type="number" inputmode="numeric" id="c-target" value="' + esc(u.target) + '"></div>' +
-    '<p class="tiny muted" style="margin:8px 0 0">あとから設定画面で変更できます。</p>' +
+    '<div class="card"><h2>' + (again ? '利用規約・プライバシーポリシーを更新しました' : 'はじめに') + '</h2>' +
+    '<p class="small" style="margin:0 0 10px">' + (again
+      ? '内容を変更しました。引き続き使うには、もう一度確認して同意してください。'
+      : '打刻画面や給与明細の写真から収入を集計して、扶養の目標金額までの残りを表示します。使い始める前に、次の内容を確認してください。') + '</p>' +
+    '<div class="notice n-warn" style="white-space:pre-wrap">' + esc(S.init.disclaimer) + '</div>' +
+    accordion('acc-terms', '利用規約', TERMS_HTML) +
+    accordion('acc-privacy', 'プライバシーポリシー', PRIVACY_HTML) + '</div>' +
+    (again ? '' :
+      '<div class="card"><h2>基本情報</h2>' +
+      '<div class="field"><label>生年月日</label><input type="date" id="c-birth" value="' + esc(u.birthdate) + '"></div>' +
+      '<div class="field"><label>目標金額<span class="hint">扶養の判定に使う年収</span></label><input type="number" inputmode="numeric" id="c-target" value="' + esc(u.target) + '"></div>' +
+      '<p class="tiny muted" style="margin:8px 0 0">あとから設定画面で変更できます。</p></div>') +
+    '<div class="card"><label class="check"><input type="checkbox" id="c-agree"><span>利用規約とプライバシーポリシーを読み、同意します</span></label>' +
     '<div class="err" id="c-err"></div>' +
-    '<button class="btn btn-primary" id="c-ok" style="margin-top:14px">同意して始める</button></div>';
+    '<button class="btn btn-primary" id="c-ok" style="margin-top:14px" disabled>同意して' + (again ? '続ける' : '始める') + '</button></div>';
+  document.querySelectorAll('.acc-head').forEach(h => h.onclick = () => h.parentNode.classList.toggle('open'));
+  $('#c-agree').onchange = () => { $('#c-ok').disabled = !$('#c-agree').checked; };
   $('#c-ok').onclick = async () => {
+    if (!$('#c-agree').checked) return;
     const btn = $('#c-ok'); btn.disabled = true;
     try {
-      const r = await api('saveSettings', { birthdate: $('#c-birth').value, target: $('#c-target').value, includeTransport: u.includeTransport, consent: true });
+      const r = await api('saveSettings', {
+        birthdate: again ? u.birthdate : $('#c-birth').value,
+        target: again ? u.target : $('#c-target').value,
+        includeTransport: u.includeTransport, consent: true, termsVersion: TERMS_VERSION,
+      });
       S.init.user = r.user;
+      if (!r.user.consentAt || r.user.termsVersion !== S.init.termsVersion) throw new Error('同意を記録できませんでした。開き直してもう一度お試しください。');
       render();
     } catch (e) { $('#c-err').textContent = e.message; btn.disabled = false; }
   };
+}
+
+/* ====== 規約の表示・データ削除 ====== */
+function backHeader(title) {
+  return '<div class="top"><div class="top-row"><button class="icon-btn" id="back">‹</button><div class="top-title">' + title + '</div><div style="width:40px"></div></div></div>';
+}
+function renderDoc() {
+  const isTerms = S.doc === 'terms';
+  app.innerHTML = backHeader(isTerms ? '利用規約' : 'プライバシーポリシー') +
+    '<div class="card doc">' + (isTerms ? TERMS_HTML : PRIVACY_HTML) + '</div>';
+  $('#back').onclick = () => go('settings');
+}
+function renderDeleteAll() {
+  app.innerHTML = backHeader('データの削除') +
+    '<div class="card"><h2>すべてのデータを削除します</h2>' +
+    '<p class="small" style="margin:0 0 10px">次のデータをすべて削除します。<b>削除したデータは元に戻せません。</b></p>' +
+    '<ul class="small" style="margin:0 0 10px;padding-left:20px;line-height:1.8"><li>生年月日、目標金額などの設定</li><li>登録したバイト先</li><li>勤務の記録（写真から読み取ったもの・手入力したもの）</li><li>給与明細の記録</li><li>読み取り待ちで預かっている画像</li></ul>' +
+    '<p class="tiny muted" style="margin:0">LINEのトーク画面に残った写真は、ご自身で削除してください。削除後にまた使う場合は、最初から設定し直しになります。</p>' +
+    '<div class="err" id="d-err"></div>' +
+    '<button class="btn btn-line" id="d-ok" style="margin-top:14px;color:var(--red);border-color:var(--red-l)">削除する</button>' +
+    '<button class="btn btn-line" id="d-cancel" style="margin-top:8px">やめる</button></div>';
+  $('#back').onclick = $('#d-cancel').onclick = () => go('settings');
+  let armed = false;
+  $('#d-ok').onclick = async () => {
+    const btn = $('#d-ok');
+    if (!armed) { armed = true; btn.textContent = 'もう一度押すと削除します'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; return; }
+    btn.disabled = true; btn.textContent = '削除しています…';
+    try { await api('deleteAll', { confirm: 'DELETE' }); S.status = {}; go('deleted'); }
+    catch (e) { $('#d-err').textContent = e.message; btn.disabled = false; btn.textContent = 'もう一度押すと削除します'; }
+  };
+}
+function renderDeleted() {
+  $('#nav').hidden = true;
+  app.innerHTML = '<div class="card center" style="margin-top:40px"><h2>削除しました</h2>' +
+    '<p class="small muted">すべてのデータを削除しました。ご利用ありがとうございました。<br>また使うときは、メニューから開くと最初の設定から始められます。</p>' +
+    '<button class="btn btn-line" id="close" style="margin-top:12px">閉じる</button></div>';
+  $('#close').onclick = () => { try { LIFF.closeWindow(); } catch (e) { } };
 }
 
 /* ====== 収入状況 ====== */
@@ -555,13 +719,19 @@ function renderSettings() {
     '<div style="margin:12px;display:flex;flex-direction:column;gap:8px">' +
     (hasIchigoya ? '' : S.init.presets.map(p => '<button class="btn btn-line" data-preset="' + esc(p.id) + '">' + esc(p.name) + 'を追加（プリセット）</button>').join('')) +
     '<button class="btn btn-line" id="s-add">ほかのバイト先を追加</button></div>' +
+    '<div class="section-title">規約とデータ</div><div class="card" style="margin-top:4px;padding:4px 14px">' +
+    '<div class="list-row" data-doc="terms"><div class="grow">利用規約</div><span class="chev">›</span></div>' +
+    '<div class="list-row" data-doc="privacy"><div class="grow">プライバシーポリシー</div><span class="chev">›</span></div>' +
+    '<div class="list-row" id="s-del"><div class="grow" style="color:var(--red)">すべてのデータを削除</div><span class="chev">›</span></div></div>' +
     '<div class="disclaimer">' + esc(S.init.disclaimer).replace(/\n/g, '<br>') + (u.consentAt ? '<br>同意日時：' + esc(u.consentAt) : '') + '</div>';
 
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { $('#s-target').value = b.dataset.t; });
+  document.querySelectorAll('[data-doc]').forEach(el => el.onclick = () => { S.doc = el.dataset.doc; go('doc'); });
+  $('#s-del').onclick = () => go('deleteAll');
   $('#s-save').onclick = async () => {
     const btn = $('#s-save'); btn.disabled = true;
     try {
-      const r = await api('saveSettings', { birthdate: $('#s-birth').value, target: $('#s-target').value, includeTransport: $('#s-trans').checked, consent: true });
+      const r = await api('saveSettings', { birthdate: $('#s-birth').value, target: $('#s-target').value, includeTransport: $('#s-trans').checked });
       S.init.user = r.user; invalidate(); toast('保存しました'); btn.disabled = false;
     } catch (e) { $('#s-err').textContent = e.message; btn.disabled = false; }
   };
